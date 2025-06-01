@@ -3,39 +3,56 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
-import { Menu, X, UserCircle, CalendarDays, Search, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, UserCircle, CalendarDays, Search, LogIn, UserPlus, LogOutIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 
-const navLinks = [
+const baseNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/doctors', label: 'Find Doctors' },
-  { href: '/patient/dashboard', label: 'My Dashboard' }, // Example, can be conditional
 ];
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Mock login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
   
-  // Mock login/logout for UI demonstration
   useEffect(() => {
-    // Check local storage or a cookie for login state if you implement actual auth
     const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+    const role = localStorage.getItem('userRole');
     setIsLoggedIn(loggedInStatus);
+    setUserRole(role);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userRole');
     setIsLoggedIn(false);
-    // Potentially redirect to home or login page
+    setUserRole(null);
+    router.push('/'); // Redirect to home page after logout
   };
+
+  const getDashboardLink = () => {
+    if (userRole === 'doctor') {
+      return '/doctor/dashboard';
+    }
+    if (userRole === 'patient') {
+      return '/patient/dashboard';
+    }
+    return '/login'; // Fallback if role not set or unknown
+  };
+  
+  const navLinks = [
+    ...baseNavLinks,
+    ...(isLoggedIn ? [{ href: getDashboardLink(), label: 'My Dashboard' }] : [])
+  ];
 
 
   return (
@@ -59,13 +76,13 @@ export function Header() {
           {isLoggedIn ? (
             <>
               <Button variant="ghost" size="icon" asChild>
-                <Link href="/patient/dashboard">
+                <Link href={getDashboardLink()}>
                   <UserCircle className="h-6 w-6 text-primary" />
                   <span className="sr-only">Profile</span>
                 </Link>
               </Button>
               <Button variant="outline" onClick={handleLogout} className="text-primary border-primary hover:bg-primary/10">
-                Logout
+                <LogOutIcon className="mr-2 h-5 w-5" /> Logout
               </Button>
             </>
           ) : (
@@ -117,11 +134,13 @@ export function Header() {
                 <hr className="border-border my-4" />
                 {isLoggedIn ? (
                   <>
-                    <SheetClose asChild>
-                      <Link href="/patient/dashboard" className="block text-lg font-medium text-foreground hover:text-primary transition-colors">Profile</Link>
+                     <SheetClose asChild>
+                      <Link href={getDashboardLink()} className="flex items-center text-lg font-medium text-foreground hover:text-primary transition-colors">
+                        <UserCircle className="mr-2 h-5 w-5" /> Profile
+                      </Link>
                     </SheetClose>
                     <Button variant="outline" onClick={handleLogout} className="w-full text-primary border-primary hover:bg-primary/10">
-                      Logout
+                      <LogOutIcon className="mr-2 h-5 w-5" /> Logout
                     </Button>
                   </>
                 ) : (

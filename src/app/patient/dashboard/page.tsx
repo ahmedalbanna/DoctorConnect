@@ -12,6 +12,7 @@ import { CalendarDays, UserCircle, FileText, Edit3, LogOut } from 'lucide-react'
 import type { Patient, Appointment } from '@/types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge'; // Added import for Badge
 
 // Mock Data
 const mockPatient: Patient = {
